@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Firework Confession</title>
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        background: black;
+        overflow: hidden;
+        font-family: "Georgia", serif;
+    }
+
+    #confession {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #ffd6e7;
+        font-size: 1.6rem;
+        text-align: center;
+        width: 90%;
+        line-height: 1.6;
+        text-shadow: 0 0 10px #ff5ea6, 0 0 20px #ff2d7a;
+        animation: fadeIn 3s ease forwards;
+        opacity: 0;
+        white-space: pre-line;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+</style>
+</head>
+
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div id="confession">
+Amid the fireworks’ fleeting glow,  
+I feel my heart reaching for yours…  
+I like you more than I can ever speak—  
+a quiet truth I’ve carried far too long.
+</div>
+
+<script>
+// --- FIREWORKS SCRIPT ---
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+let cw = (canvas.width = window.innerWidth);
+let ch = (canvas.height = window.innerHeight);
+
+window.onresize = () => {
+  cw = canvas.width = window.innerWidth;
+  ch = canvas.height = window.innerHeight;
+};
+
+class Firework {
+  constructor() {
+    this.x = Math.random() * cw;
+    this.y = ch;
+    this.targetX = Math.random() * cw;
+    this.targetY = Math.random() * (ch / 2);
+    this.particles = [];
+    this.exploded = false;
+    this.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
+    this.speed = 3;
+  }
+
+  update() {
+    if (!this.exploded) {
+      const dx = this.targetX - this.x;
+      const dy = this.targetY - this.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < 5) {
+        this.explode();
+      } else {
+        this.x += (dx / distance) * this.speed;
+        this.y += (dy / distance) * this.speed;
+      }
+    }
+
+    this.particles.forEach((p, i) => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.02;
+      p.life -= 1;
+      if (p.life <= 0) this.particles.splice(i, 1);
+    });
+  }
+
+  explode() {
+    this.exploded = true;
+    for (let i = 0; i < 40; i++) {
+      this.particles.push({
+        x: this.x,
+        y: this.y,
+        vx: (Math.random() - 0.5) * 4,
+        vy: (Math.random() - 0.5) * 4,
+        life: 50 + Math.random() * 20,
+        color: this.color
+      });
+    }
+  }
+
+  draw() {
+    if (!this.exploded) {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = this.color;
+      ctx.fill();
+    }
+
+    this.particles.forEach((p) => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+    });
+  }
+}
+
+let fireworks = [];
+
+function animate() {
+  ctx.fillStyle = "rgba(0,0,0,0.2)";
+  ctx.fillRect(0, 0, cw, ch);
+
+  if (Math.random() < 0.05) {
+    fireworks.push(new Firework());
+  }
+
+  fireworks.forEach((fw, i) => {
+    fw.update();
+    fw.draw();
+    if (fw.exploded && fw.particles.length === 0) {
+      fireworks.splice(i, 1);
+    }
+  });
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+
+</body>
+</html>
